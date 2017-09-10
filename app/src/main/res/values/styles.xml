@@ -1,0 +1,35 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <!-- Customize your theme here. -->
+        <item name="android:actionOverflowButtonStyle">@style/SettingsButton</item> 
+
+    </style>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar"/>
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light"/>
+
+    <style name="SettingsButton"> 
+        <item name="android:paddingRight">10dp</item> 
+        <item name="android:src">@drawable/gear_icon_48</item> 
+    </style>
+
+    <style name="ConnectingPopup">
+        <item name="android:textAlignment">center</item>
+        <item name="android:layout_marginRight">30dp</item>
+    </style>
+
+
+</resources>

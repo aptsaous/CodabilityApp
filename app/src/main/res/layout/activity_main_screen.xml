@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="gr.inf.codabilityapp.MainScreenActivity">
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@color/color_uth"
+            app:popupTheme="@style/AppTheme.PopupOverlay"/>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <include layout="@layout/content_main_screen"
+             android:id="@+id/include"/>
+
+    <ImageButton
+        android:id="@+id/micBtn"
+        android:layout_width="147dp"
+        android:layout_height="146dp"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:layout_marginBottom="70dp"
+        android:adjustViewBounds="false"
+        android:background="@drawable/design_fab_background"
+        android:backgroundTint="@color/colorUth"
+        android:elevation="4dp"
+        android:keepScreenOn="true"
+        app:srcCompat="@drawable/mic_icon_2"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="241dp"
+        android:layout_marginTop="40dp"
+        android:background="@color/colorPrimary"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/currentCmd"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:background="@color/colorPrimary"
+            android:fontFamily="sans-serif"
+            android:gravity="center_vertical|center_horizontal"
+            android:paddingTop="10dp"
+            android:text="@string/default_msg"
+            android:textAlignment="center"
+            android:textColor="@android:color/background_dark"
+            android:textSize="20sp"
+            android:textStyle="italic"/>
+    </LinearLayout>
+
+</android.support.design.widget.CoordinatorLayout>
