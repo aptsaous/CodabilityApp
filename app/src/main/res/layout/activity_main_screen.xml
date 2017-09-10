@@ -35,6 +35,7 @@
         android:backgroundTint="@color/colorUth"
         android:elevation="4dp"
         android:keepScreenOn="true"
+        android:onClick="getSpeechInput"
         app:srcCompat="@drawable/mic_icon_2"/>
 
     <LinearLayout
@@ -45,14 +46,14 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/currentCmd"
+            android:id="@+id/speechResult"
             android:layout_width="match_parent"
             android:layout_height="160dp"
             android:background="@color/colorPrimary"
             android:fontFamily="sans-serif"
             android:gravity="center_vertical|center_horizontal"
             android:paddingTop="10dp"
-            android:text="@string/default_msg"
+            android:text="@string/speech_result"
             android:textAlignment="center"
             android:textColor="@android:color/background_dark"
             android:textSize="20sp"

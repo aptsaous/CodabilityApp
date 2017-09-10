@@ -1,13 +1,13 @@
 package gr.inf.codabilityapp;
 
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.res.ColorStateList;
+import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.os.Bundle;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -15,18 +15,21 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+
+import static android.speech.SpeechRecognizer.ERROR_CLIENT;
+import static android.speech.SpeechRecognizer.ERROR_NO_MATCH;
+import static android.speech.SpeechRecognizer.ERROR_RECOGNIZER_BUSY;
+import static android.speech.SpeechRecognizer.ERROR_SPEECH_TIMEOUT;
 
 public class MainScreenActivity extends AppCompatActivity
 {
@@ -35,20 +38,34 @@ public class MainScreenActivity extends AppCompatActivity
     private ConstraintLayout mLayout;
     private PopupWindow mLoadingPopup;
     private PopupWindow mHelpPopup;
+    private SpeechRecognizer mSpeechRecognizer;
+    private TextView mSpeechResult;
+    private ImageButton mMicBtn;
+
+    final String TAG = "<<Codability>>";
+    final long SPEECH_TIMER = 1000;
 
     @Override
     protected void onCreate( Bundle savedInstanceState )
     {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_main_screen );
+
         Toolbar toolbar = ( Toolbar ) findViewById( R.id.toolbar );
         toolbar.setTitleTextColor( Color.BLACK );
         toolbar.setTitle( "Codability" );
         setSupportActionBar( toolbar );
 
         mContext = getApplicationContext();
-
         mLayout = ( ConstraintLayout ) findViewById( R.id.include );
+        mSpeechResult = ( TextView ) findViewById( R.id.speechResult );
+        mMicBtn = ( ImageButton ) findViewById( R.id.micBtn );
+
+        mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer( this );
+        SpeechRecognitionListener listener = new SpeechRecognitionListener();
+        mSpeechRecognizer.setRecognitionListener( listener );
+
+        Log.v( TAG, "onCreate()" );
     }
 
     @Override
@@ -77,6 +94,7 @@ public class MainScreenActivity extends AppCompatActivity
             progressBar.getIndeterminateDrawable().setColorFilter( Color.RED, android.graphics.PorterDuff.Mode.SRC_IN );
 
             mLoadingPopup = new PopupWindow( customView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT );
+            mLoadingPopup.showAtLocation( mLayout, Gravity.CENTER, 0, 0 );
 
             ImageButton closeButton = customView.findViewById( R.id.closeBtn );
 
@@ -91,8 +109,6 @@ public class MainScreenActivity extends AppCompatActivity
                 }
             } );
 
-            mLoadingPopup.showAtLocation( mLayout, Gravity.CENTER, 0, 0 );
-
             return true;
         }
         else if ( id == R.id.help )
@@ -104,6 +120,7 @@ public class MainScreenActivity extends AppCompatActivity
             View customView = inflater.inflate( R.layout.help_layout, null );
 
             mHelpPopup = new PopupWindow( customView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT );
+            mHelpPopup.showAtLocation( mLayout, Gravity.CENTER, 0, 0 );
 
             TextView textView = customView.findViewById( R.id.helpPage );
             textView.setMovementMethod( new ScrollingMovementMethod() );
@@ -119,11 +136,116 @@ public class MainScreenActivity extends AppCompatActivity
                 }
             } );
 
-            mHelpPopup.showAtLocation( mLayout, Gravity.CENTER, 0, 0 );
-
             return true;
         }
 
         return super.onOptionsItemSelected( item );
+    }
+
+    /* Triggered by clicking on the mic icon */
+    public void getSpeechInput( View view )
+    {
+        Intent mSpeechRecognizerIntent = new Intent( RecognizerIntent.ACTION_RECOGNIZE_SPEECH );
+        mSpeechRecognizerIntent.putExtra( RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM );
+        mSpeechRecognizerIntent.putExtra( RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName() );
+
+        mSpeechRecognizer.startListening( mSpeechRecognizerIntent );
+
+        Log.v( TAG, "getSpeechInput()" );
+
+    }
+
+    private class SpeechRecognitionListener implements RecognitionListener
+    {
+
+        @Override
+        public void onReadyForSpeech( Bundle bundle )
+        {
+
+        }
+
+        @Override
+        public void onBeginningOfSpeech()
+        {
+
+        }
+
+        @Override
+        public void onRmsChanged( float v )
+        {
+
+        }
+
+        @Override
+        public void onBufferReceived( byte[] bytes )
+        {
+
+        }
+
+        @Override
+        public void onEndOfSpeech()
+        {
+            Log.v( TAG, "onEndOfSpeech()" );
+
+        }
+
+        @Override
+        public void onError( int i )
+        {
+            switch ( i )
+            {
+                case ERROR_SPEECH_TIMEOUT:
+                case ERROR_NO_MATCH:
+                    Log.v( TAG, "OnError(): " + i );
+
+                    try
+                    {
+                        Thread.sleep( SPEECH_TIMER );
+                    }
+                    catch ( InterruptedException e )
+                    {
+                        e.printStackTrace();
+                    }
+
+                    mMicBtn.performClick();
+                    break;
+
+                case ERROR_RECOGNIZER_BUSY:
+                    Log.v( TAG, "OnError(): ERROR_RECOGNIZER_BUSY" );
+                    break;
+                case ERROR_CLIENT:
+                    Log.v( TAG, "OnError(): ERROR_CLIENT" );
+                    break;
+                default:
+                    Log.v( TAG, "OnError(): " + i );
+                    break;
+
+            }
+        }
+
+        @Override
+        public void onResults( Bundle results )
+        {
+            ArrayList<String> matches = results.getStringArrayList( SpeechRecognizer.RESULTS_RECOGNITION );
+
+            mSpeechResult.setText( matches.get( 0 ) );
+
+            Log.v( TAG, "onResults()" );
+
+            mMicBtn.performClick();
+
+        }
+
+        @Override
+        public void onPartialResults( Bundle bundle )
+        {
+
+        }
+
+        @Override
+        public void onEvent( int i, Bundle bundle )
+        {
+
+        }
     }
 }

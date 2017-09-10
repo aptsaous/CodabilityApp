@@ -9,6 +9,6 @@
             <li>Create new class\n</li>
             <li>Create new function\n</li>
         </ol></string>
-    <string name="default_msg">Press the mic button and start coding</string>
-    <string name="connectingMsg">Trying to connect with IntelliJ..</string>
+    <string name="speech_result">Press the mic button and start coding</string>
+    <string name="connecting_msg">Trying to connect with IntelliJ..</string>
 </resources>
