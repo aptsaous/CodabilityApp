@@ -1,5 +1,6 @@
 package gr.inf.codabilityapp;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -30,10 +31,11 @@ import static android.speech.SpeechRecognizer.ERROR_CLIENT;
 import static android.speech.SpeechRecognizer.ERROR_NO_MATCH;
 import static android.speech.SpeechRecognizer.ERROR_RECOGNIZER_BUSY;
 import static android.speech.SpeechRecognizer.ERROR_SPEECH_TIMEOUT;
+import static gr.inf.codabilityapp.DiscoverIntelliJ.intelliJPort;
+import static gr.inf.codabilityapp.DiscoverIntelliJ.socket;
 
 public class MainScreenActivity extends AppCompatActivity
 {
-
     private Context mContext;
     private ConstraintLayout mLayout;
     private PopupWindow mLoadingPopup;
@@ -41,9 +43,12 @@ public class MainScreenActivity extends AppCompatActivity
     private SpeechRecognizer mSpeechRecognizer;
     private TextView mSpeechResult;
     private ImageButton mMicBtn;
+    private Activity mActivity;
 
-    final String TAG = "<<Codability>>";
+    final static String TAG = "<<Codability>>";
     final long SPEECH_TIMER = 1000;
+    public static boolean mStopListening = false;
+    public static final int NOT_VALID = -1;
 
     @Override
     protected void onCreate( Bundle savedInstanceState )
@@ -60,12 +65,14 @@ public class MainScreenActivity extends AppCompatActivity
         mLayout = ( ConstraintLayout ) findViewById( R.id.include );
         mSpeechResult = ( TextView ) findViewById( R.id.speechResult );
         mMicBtn = ( ImageButton ) findViewById( R.id.micBtn );
+        mActivity = this;
 
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer( this );
         SpeechRecognitionListener listener = new SpeechRecognitionListener();
         mSpeechRecognizer.setRecognitionListener( listener );
 
-        Log.v( TAG, "onCreate()" );
+
+        Log.d( TAG, "onCreate()" );
     }
 
     @Override
@@ -87,6 +94,8 @@ public class MainScreenActivity extends AppCompatActivity
             if ( mHelpPopup != null && mHelpPopup.isShowing() )
                 mHelpPopup.dismiss();
 
+            mStopListening = true;
+
             LayoutInflater inflater = ( LayoutInflater ) mContext.getSystemService( LAYOUT_INFLATER_SERVICE );
             final View customView = inflater.inflate( R.layout.progress_layout, null );
 
@@ -96,16 +105,18 @@ public class MainScreenActivity extends AppCompatActivity
             mLoadingPopup = new PopupWindow( customView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT );
             mLoadingPopup.showAtLocation( mLayout, Gravity.CENTER, 0, 0 );
 
-            ImageButton closeButton = customView.findViewById( R.id.closeBtn );
+            final DiscoverIntelliJ discoverIntelliJ = new DiscoverIntelliJ();
+            discoverIntelliJ.execute();
 
+            ImageButton closeButton = customView.findViewById( R.id.closeBtn );
             closeButton.setOnClickListener( new View.OnClickListener() {
 
                 @Override
                 public void onClick( View view )
                 {
                     mLoadingPopup.dismiss();
-
-                    Snackbar.make( findViewById( R.id.include ), "Connection canceled", Snackbar.LENGTH_LONG ).setAction( "Action", null ).show();
+                    socket.close();
+                    Snackbar.make( findViewById( R.id.include ), "Connection canceled by user", Snackbar.LENGTH_LONG ).setAction( "Action", null ).show();
                 }
             } );
 
@@ -145,13 +156,22 @@ public class MainScreenActivity extends AppCompatActivity
     /* Triggered by clicking on the mic icon */
     public void getSpeechInput( View view )
     {
+        if ( intelliJPort == NOT_VALID )
+        {
+            Snackbar.make( findViewById( R.id.include ), "You need to connect with IntelliJ first.\nGo to Settings -> Connect", Snackbar.LENGTH_LONG ).setAction( "Action", null ).show();
+            return;
+        }
+
+        if ( mStopListening )
+            return;
+
         Intent mSpeechRecognizerIntent = new Intent( RecognizerIntent.ACTION_RECOGNIZE_SPEECH );
         mSpeechRecognizerIntent.putExtra( RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM );
         mSpeechRecognizerIntent.putExtra( RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName() );
 
         mSpeechRecognizer.startListening( mSpeechRecognizerIntent );
 
-        Log.v( TAG, "getSpeechInput()" );
+        Log.d( TAG, "getSpeechInput()" );
 
     }
 
@@ -185,7 +205,7 @@ public class MainScreenActivity extends AppCompatActivity
         @Override
         public void onEndOfSpeech()
         {
-            Log.v( TAG, "onEndOfSpeech()" );
+            Log.d( TAG, "onEndOfSpeech()" );
 
         }
 
@@ -196,7 +216,7 @@ public class MainScreenActivity extends AppCompatActivity
             {
                 case ERROR_SPEECH_TIMEOUT:
                 case ERROR_NO_MATCH:
-                    Log.v( TAG, "OnError(): " + i );
+                    Log.d( TAG, "OnError(): " + i );
 
                     try
                     {
@@ -211,13 +231,13 @@ public class MainScreenActivity extends AppCompatActivity
                     break;
 
                 case ERROR_RECOGNIZER_BUSY:
-                    Log.v( TAG, "OnError(): ERROR_RECOGNIZER_BUSY" );
+                    Log.d( TAG, "OnError(): ERROR_RECOGNIZER_BUSY" );
                     break;
                 case ERROR_CLIENT:
-                    Log.v( TAG, "OnError(): ERROR_CLIENT" );
+                    Log.d( TAG, "OnError(): ERROR_CLIENT" );
                     break;
                 default:
-                    Log.v( TAG, "OnError(): " + i );
+                    Log.d( TAG, "OnError(): " + i );
                     break;
 
             }
@@ -230,7 +250,10 @@ public class MainScreenActivity extends AppCompatActivity
 
             mSpeechResult.setText( matches.get( 0 ) );
 
-            Log.v( TAG, "onResults()" );
+            Log.d( TAG, "onResults()" );
+
+            HttpRequest httpRequest = new HttpRequest( mActivity );
+            httpRequest.execute( matches.get( 0 ) );
 
             mMicBtn.performClick();
 
