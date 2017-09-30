@@ -51,6 +51,8 @@ public class MainScreenActivity extends AppCompatActivity
     public static boolean mStopListening = false;
     public static final int NOT_CONNECTED = -1;
     static boolean isAuthorized = false;
+    final int MAX_TIMEOUT_ATTEMPTS = 10;
+    int speechTimeoutAttempts = 0;
 
     @Override
     protected void onCreate( Bundle savedInstanceState )
@@ -152,6 +154,7 @@ public class MainScreenActivity extends AppCompatActivity
         } );
     }
 
+    // TODO: Add available commands in the help menu
     public void helpMenu()
     {
         if ( mLoadingPopup != null && mLoadingPopup.isShowing() )
@@ -185,6 +188,12 @@ public class MainScreenActivity extends AppCompatActivity
         {
             Snackbar.make( findViewById( R.id.include ), "You need to connect with IntelliJ first.\nGo to Settings -> Connect", Snackbar.LENGTH_LONG ).setAction( "Action", null ).show();
 
+            return;
+        }
+
+        if ( speechTimeoutAttempts == MAX_TIMEOUT_ATTEMPTS )
+        {
+            speechTimeoutAttempts = 0;
             return;
         }
 
@@ -257,6 +266,7 @@ public class MainScreenActivity extends AppCompatActivity
                         e.printStackTrace();
                     }
 
+                    speechTimeoutAttempts++;
                     mMicBtn.performClick();
                     break;
 
@@ -284,6 +294,7 @@ public class MainScreenActivity extends AppCompatActivity
             HttpRequest httpRequest = new HttpRequest( mActivity );
             httpRequest.execute( matches.get( 0 ) );
 
+            speechTimeoutAttempts = 0;
             mMicBtn.performClick();
 
             Log.d( TAG, "onResults()" );
