@@ -11,9 +11,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 
+import static gr.inf.codabilityapp.DiscoverIntelliJ.intelliJAddr;
 import static gr.inf.codabilityapp.DiscoverIntelliJ.intelliJPort;
-import static gr.inf.codabilityapp.MainScreenActivity.NOT_VALID;
+import static gr.inf.codabilityapp.MainScreenActivity.NOT_CONNECTED;
 import static gr.inf.codabilityapp.MainScreenActivity.TAG;
+import static gr.inf.codabilityapp.MainScreenActivity.isAuthorized;
 import static gr.inf.codabilityapp.MainScreenActivity.mStopListening;
 
 
@@ -32,22 +34,39 @@ class HttpRequest extends AsyncTask<String, Void, Void>
         URL url;
         HttpURLConnection urlConnection = null;
 
+        if ( ( intelliJPort == NOT_CONNECTED ) || ( intelliJAddr == null ) )
+        {
+            Snackbar.make( mainActivity.findViewById( R.id.include ), "You need to connect with IntelliJ first.\nGo to Settings -> Connect", Snackbar.LENGTH_LONG ).setAction( "Action", null ).show();
+
+            mStopListening = true;
+            isAuthorized = false;
+
+            return null;
+        }
+
         try
         {
             String cmd = URLEncoder.encode( params[0] );
-//            url = new URL( "http://" + intelliJAddr + ":" + intelliJPort + "/?cmd=" + cmd );
-            url = new URL( "http://192.168.0.131:8888" );
+
+            if ( isAuthorized )
+                url = new URL( "http://" + intelliJAddr + ":" + intelliJPort + "/?cmd=" + cmd );
+            else
+                url = new URL( "http://" + intelliJAddr + ":" + intelliJPort + "/?auth=" + cmd );
+
             urlConnection = ( HttpURLConnection ) url.openConnection();
 
+            if ( !isAuthorized && urlConnection.getResponseCode() == HttpURLConnection.HTTP_OK )
+            {
+                isAuthorized = true;
+            }
+            else if ( !isAuthorized && urlConnection.getResponseCode() != HttpURLConnection.HTTP_OK )
+            {
+                Snackbar.make( mainActivity.findViewById( R.id.include ), "Invalid activation code!! Please try again", Snackbar.LENGTH_LONG ).setAction( "Action", null ).show();
+
+            }
+
             InputStreamReader input = new InputStreamReader( urlConnection.getInputStream() );
-
             int data = input.read();
-
-//            while (data != -1) {
-//                char current = (char) data;
-//                data = isw.read();
-//                System.out.print(current);
-//            }
 
         }
         catch ( ConnectException e )
@@ -56,11 +75,16 @@ class HttpRequest extends AsyncTask<String, Void, Void>
             {
                 Snackbar.make( mainActivity.findViewById( R.id.include ), "Connection refused!! Verify that IntelliJ is running...", Snackbar.LENGTH_LONG ).setAction( "Action", null ).show();
 
+                mStopListening = true;
+                intelliJPort = NOT_CONNECTED;
+                isAuthorized = false;
+
                 Log.d( TAG, "ECONNREFUSED" );
 
-                mStopListening = true;
-                intelliJPort = NOT_VALID;
-
+            }
+            else
+            {
+                Log.d( TAG, "ConnectException " + e.getMessage() );
             }
 
 

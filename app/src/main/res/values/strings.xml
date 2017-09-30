@@ -9,6 +9,7 @@
             <li>Create new class\n</li>
             <li>Create new function\n</li>
         </ol></string>
-    <string name="speech_result">Press the mic button and start coding</string>
+    <string name="speech_result">Go to settings and connect with IntelliJ.</string>
     <string name="connecting_msg">Trying to connect with IntelliJ..</string>
+    <string name="activationMsg">Press the mic button\n and\n dictate the act. code shown in IntelliJ</string>
 </resources>
